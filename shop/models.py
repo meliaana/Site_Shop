@@ -9,9 +9,12 @@ class Category(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ['order']
+
 
 class Product(models.Model):
-    category = models.ForeignKey(to='Category', on_delete=models.CASCADE, related_name='product')
+    category = models.ForeignKey(to='Category', on_delete=models.CASCADE, related_name='products')
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=100, blank=True, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
@@ -24,7 +27,7 @@ class Product(models.Model):
 
 
 class Tag(models.Model):
-    products = models.ManyToManyField(to='Product', related_name='tag')
+    products = models.ManyToManyField(to='Product', related_name='tags')
     title = models.CharField(max_length=255)
 
     def __str__(self):
