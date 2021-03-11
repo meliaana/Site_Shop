@@ -1,13 +1,15 @@
+from django.db.models import Sum, F, FloatField
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .models import Category, Product, Tag, CartItem, Cart
 from .serializer import CategorySerializer, ProductListSerializer, CategoryList, ProductDetailSerializer, \
-    ProductCreateSerializer, CartItemSerializer
+    ProductCreateSerializer, CartItemSerializer, CartSerializer
 
 
 class CategoryView(RetrieveUpdateDestroyAPIView):
@@ -17,7 +19,7 @@ class CategoryView(RetrieveUpdateDestroyAPIView):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['tag'] = []
-        tags = Tag.objects.filter(products__category=self.get_object().pk)
+        tags = Tag.objects.filter(products__category=self.get_object().pk).distinct()
         for t in tags:
             context['tag'].append(t.title)
         return context
@@ -45,12 +47,11 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         try:
-            print(self.action)
             return self.serializer_action_class[self.action]
         except (KeyError, AttributeError):
             return super().get_serializer_class()
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def add_to_cart(self, request, pk):
         serializer = CartItemSerializer(data=request.data)
         if serializer.is_valid():
@@ -69,5 +70,20 @@ class ProductViewSet(viewsets.ModelViewSet):
             prod.save()
             return Response({'status': 'created'})
         else:
-            return Response(serializer.errors,
-                            status=HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+
+class CartViewSet(RetrieveUpdateDestroyAPIView):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
+    def get_serializer_context(self):
+        total_cost = CartItem.objects.filter(is_active=True, cart=self.get_object().pk).aggregate(
+            price=Sum(F('price') * F('quantity'), output_field=FloatField()))
+        context = {"total_cots": total_cost}
+        return context
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)

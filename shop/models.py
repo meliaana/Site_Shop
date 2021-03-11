@@ -41,9 +41,16 @@ class CartItem(models.Model):
     cart = models.ForeignKey(to='Cart', on_delete=models.CASCADE, related_name='items')
     quantity = models.PositiveIntegerField()
     is_active = models.BooleanField()
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     def __str__(self):
         return self.product.title
+
+    def save(self, *args, **kwargs):
+        price = Product.objects.get(pk=self.product.pk).price
+        if not self.price:
+            self.price = price
+        super().save(*args, **kwargs)
 
 
 class Cart(models.Model):

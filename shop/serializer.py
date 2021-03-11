@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 
-from .models import Category, Product, Tag, CartItem
+from .models import Category, Product, Tag, CartItem, Cart
 
 
 class TagSerializer(PrimaryKeyRelatedField, serializers.ModelSerializer):
@@ -15,12 +15,6 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'title', 'slug', 'price', ]
-
-
-class ProductDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -56,6 +50,20 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product = serializers.CharField(source='product.title', read_only=True)
+
     class Meta:
         model = CartItem
-        exclude = ('cart', )
+        fields = ('quantity', 'price', 'product')
+
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)
+    total_price = serializers.SerializerMethodField(method_name='get_total_price')
+
+    def get_total_price(self, obj):
+        return self.context['total_cots']
+
+    class Meta:
+        model = Cart
+        fields = ['items', 'total_price']
