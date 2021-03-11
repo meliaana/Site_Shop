@@ -1,8 +1,11 @@
+import json
+
+import requests
 from django.db.models import Sum, F, FloatField
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
@@ -10,6 +13,19 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from .models import Category, Product, Tag, CartItem, Cart
 from .serializer import CategorySerializer, ProductListSerializer, CategoryList, ProductDetailSerializer, \
     ProductCreateSerializer, CartItemSerializer, CartSerializer
+
+
+def send_request(text):
+    headers = {
+        'Content-type': 'application/json',
+    }
+    url = 'https://hooks.slack.com/services/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'
+    data = '{"text":"'+str(JSONRenderer().render(text))+'"}'
+    print(data)
+    response = requests.post(url=url, headers=headers, data=data)
+
+
+    return response
 
 
 class CategoryView(RetrieveUpdateDestroyAPIView):
@@ -86,4 +102,5 @@ class CartViewSet(RetrieveUpdateDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        print(send_request(serializer.data))
         return Response(serializer.data)
