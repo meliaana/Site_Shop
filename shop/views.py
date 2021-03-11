@@ -1,5 +1,3 @@
-import json
-
 import requests
 from django.db.models import Sum, F, FloatField
 from rest_framework import viewsets
@@ -21,9 +19,7 @@ def send_request(text):
     }
     url = 'https://hooks.slack.com/services/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'
     data = '{"text":"'+str(text)+'"}'
-    print(data)
     response = requests.post(url=url, headers=headers, data=data)
-
 
     return response
 
@@ -102,5 +98,4 @@ class CartViewSet(RetrieveUpdateDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        print(send_request(serializer.data))
         return Response(serializer.data)

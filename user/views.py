@@ -17,10 +17,8 @@ class UserCreate(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = RegistrationSerializer(data=request.data)
-        print(serializer)
         if serializer.is_valid():
             user = serializer.save()
-            print(user)
             return Response({'response': "successfully registered account", 'email': user.email})
         else:
             return Response(serializer.errors)
