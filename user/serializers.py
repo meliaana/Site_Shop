@@ -34,4 +34,6 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserDetailSerliazer(serializers.Serializer):
     email = serializers.EmailField()
-    notes = serializers.StringRelatedField(many=True)
+    cart = serializers.StringRelatedField(many=True)
+
+

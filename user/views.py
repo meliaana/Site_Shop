@@ -6,7 +6,7 @@ from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUp
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from shop.models import Product
+from shop.models import Product, Cart
 from .models import User
 from user.serializers import RegistrationSerializer, UserListSerializer, UserDetailSerliazer
 
@@ -32,7 +32,7 @@ class UserList(ListCreateAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def users_detail(request, pk):
     try:
         user = User.objects.get(pk=pk)
@@ -40,6 +40,6 @@ def users_detail(request, pk):
         return HttpResponse(status=404)
 
     if request.method == 'GET':
-        notes = Product.objects.filter(author=user)
-        serializer = UserDetailSerliazer({'email': user.email, 'notes': notes})
+        cart = Cart.objects.filter(owner=user)
+        serializer = UserDetailSerliazer({'email': user.email, 'cart': cart})
         return Response(serializer.data)
