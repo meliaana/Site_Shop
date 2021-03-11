@@ -1,5 +1,7 @@
-from django.db import models
 from ckeditor.fields import RichTextField
+from django.db import models
+
+from user.models import User
 
 
 class Category(models.Model):
@@ -45,4 +47,4 @@ class CartItem(models.Model):
 
 
 class Cart(models.Model):
-    owner = models.OneToOneField(to='auth.User', on_delete=models.CASCADE, default=None)
+    owner = models.OneToOneField(to='user.User', on_delete=models.CASCADE, default=None)
