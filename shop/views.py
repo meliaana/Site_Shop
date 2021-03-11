@@ -1,10 +1,13 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from .models import Category, Product, Tag
-from .serializer import CategorySerializer, ProductListSerializer, CategoryList, ProductDetailSerializer
+from .models import Category, Product, Tag, CartItem, Cart
+from .serializer import CategorySerializer, ProductListSerializer, CategoryList, ProductDetailSerializer, \
+    ProductCreateSerializer, CartItemSerializer
 
 
 class CategoryView(RetrieveUpdateDestroyAPIView):
@@ -27,14 +30,44 @@ class CategoryListView(ListCreateAPIView):
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ProductListSerializer
+    serializer_class = ProductDetailSerializer
+    serializer_action_class = {'list': ProductListSerializer,
+                               'retrieve': ProductDetailSerializer,
+                               'create': ProductCreateSerializer,
+                               'update': ProductCreateSerializer,
+                               'add_to_cart': CartItemSerializer}
 
-    def retrieve(self, request, *args, **kwargs):
-        # self.lookup_field = 'slug'
-        instance = self.get_object()
-        serializer = ProductDetailSerializer(instance)
-        return Response(serializer.data)
+    def get_permissions(self):
+        permission_classes = []
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
 
-    def create(self, request, *args, **kwargs):
-        self.permission_classes = [IsAdminUser]
-        return super().create(request, *args, **kwargs)
+    def get_serializer_class(self):
+        try:
+            print(self.action)
+            return self.serializer_action_class[self.action]
+        except (KeyError, AttributeError):
+            return super().get_serializer_class()
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_to_cart(self, request, pk):
+        serializer = CartItemSerializer(data=request.data)
+        if serializer.is_valid():
+            prod = Product.objects.get(pk=pk)
+            quantity = serializer.data['quantity']
+            if prod.quantity < quantity:
+                return Response({'status': 'Not enough product'})
+            cart_item = CartItem(
+                product=prod,
+                cart=Cart.objects.get(pk=request.user.pk),
+                is_active=serializer.data['is_active'],
+                quantity=quantity,
+            )
+            cart_item.save()
+            prod.quantity -= quantity
+            prod.save()
+            return Response({'status': 'created'})
+        else:
+            return Response(serializer.errors,
+                            status=HTTP_400_BAD_REQUEST)
