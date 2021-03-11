@@ -20,7 +20,7 @@ def send_request(text):
         'Content-type': 'application/json',
     }
     url = 'https://hooks.slack.com/services/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'
-    data = '{"text":"'+str(JSONRenderer().render(text))+'"}'
+    data = '{"text":"'+str(text)+'"}'
     print(data)
     response = requests.post(url=url, headers=headers, data=data)
 
