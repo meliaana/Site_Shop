@@ -6,9 +6,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view
 
 from Site_Shop import settings
+from shop.models import Cart, CartHistory
 
 
 class UserManager(BaseUserManager):
@@ -52,6 +52,15 @@ class User(AbstractUser):
     class Meta:
         verbose_name = _('User')
         verbose_name_plural = _('Users')
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_cart(sender, instance=None, created=False, **kwargs):
+    if created:
+        cart = Cart.objects.create(owner=instance)
+        cart_history = CartHistory.objects.create(owner=instance)
+        cart.save()
+        cart_history.save()
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

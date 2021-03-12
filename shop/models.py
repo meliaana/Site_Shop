@@ -1,9 +1,6 @@
 from ckeditor.fields import RichTextField
 from django.db import models
 
-from user.models import User
-
-
 class Category(models.Model):
     title = models.CharField(max_length=255)
     order = models.PositiveIntegerField()
@@ -55,3 +52,12 @@ class CartItem(models.Model):
 
 class Cart(models.Model):
     owner = models.OneToOneField(to='user.User', on_delete=models.CASCADE, default=None)
+    cart_history = models.ForeignKey(to='CartHistory', on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.owner}\'s cart'
+
+
+class CartHistory(models.Model):
+    owner = models.OneToOneField(to='user.User', on_delete=models.CASCADE, default=None, null=True)
+

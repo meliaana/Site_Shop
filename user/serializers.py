@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from shop.models import Cart
+from shop.serializer import CartItemSerializer
 from .models import User
 
 
@@ -36,4 +38,15 @@ class UserDetailSerliazer(serializers.Serializer):
     email = serializers.EmailField()
     cart = serializers.StringRelatedField(many=True)
 
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True)
+    total_price = serializers.SerializerMethodField(method_name='get_total_price')
+
+    def get_total_price(self, obj):
+        return self.context['total_cots']
+
+    class Meta:
+        model = Cart
+        fields = ['items', 'total_price']
 

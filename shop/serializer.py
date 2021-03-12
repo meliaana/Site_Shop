@@ -51,19 +51,11 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = serializers.CharField(source='product.title', read_only=True)
+    price = serializers.CharField(source='product.price', read_only=True)
 
     class Meta:
         model = CartItem
-        fields = ('quantity', 'price', 'product')
+        fields = ('quantity', 'price', 'product', 'is_active')
 
 
-class CartSerializer(serializers.ModelSerializer):
-    items = CartItemSerializer(many=True)
-    total_price = serializers.SerializerMethodField(method_name='get_total_price')
 
-    def get_total_price(self, obj):
-        return self.context['total_cots']
-
-    class Meta:
-        model = Cart
-        fields = ['items', 'total_price']

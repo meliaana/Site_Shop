@@ -10,18 +10,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .models import Category, Product, Tag, CartItem, Cart
 from .serializer import CategorySerializer, ProductListSerializer, CategoryList, ProductDetailSerializer, \
-    ProductCreateSerializer, CartItemSerializer, CartSerializer
-
-
-def send_request(text):
-    headers = {
-        'Content-type': 'application/json',
-    }
-    url = 'https://hooks.slack.com/services/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'
-    data = '{"text":"'+str(text)+'"}'
-    response = requests.post(url=url, headers=headers, data=data)
-
-    return response
+    ProductCreateSerializer, CartItemSerializer
 
 
 class CategoryView(RetrieveUpdateDestroyAPIView):
@@ -63,7 +52,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         except (KeyError, AttributeError):
             return super().get_serializer_class()
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def add_to_cart(self, request, pk):
         serializer = CartItemSerializer(data=request.data)
         if serializer.is_valid():
@@ -85,17 +74,8 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
-class CartViewSet(RetrieveUpdateDestroyAPIView):
-    queryset = Cart.objects.all()
-    serializer_class = CartSerializer
 
-    def get_serializer_context(self):
-        total_cost = CartItem.objects.filter(is_active=True, cart=self.get_object().pk).aggregate(
-            price=Sum(F('price') * F('quantity'), output_field=FloatField()))
-        context = {"total_cots": total_cost}
-        return context
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+
+
+
