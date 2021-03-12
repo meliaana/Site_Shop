@@ -1,13 +1,11 @@
-import requests
-from django.db.models import Sum, F, FloatField
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from .filters import ProductFilter
 from .models import Category, Product, Tag, CartItem, Cart
 from .serializer import CategorySerializer, ProductListSerializer, CategoryList, ProductDetailSerializer, \
     ProductCreateSerializer, CartItemSerializer
@@ -39,9 +37,10 @@ class ProductViewSet(viewsets.ModelViewSet):
                                'create': ProductCreateSerializer,
                                'update': ProductCreateSerializer,
                                'add_to_cart': CartItemSerializer}
-    filterset_fields = ['category', ]
+    filterset_class = ProductFilter
 
-    #lookup_field = 'slug'
+
+    # lookup_field = 'slug'
 
     def get_permissions(self):
         permission_classes = []
@@ -75,10 +74,3 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({'status': 'created'})
         else:
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
-
