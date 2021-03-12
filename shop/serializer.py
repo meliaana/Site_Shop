@@ -12,9 +12,11 @@ class TagSerializer(PrimaryKeyRelatedField, serializers.ModelSerializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
+    category = serializers.CharField(source='category.title', read_only=True)
+
     class Meta:
         model = Product
-        fields = ['id', 'title', 'slug', 'price', ]
+        fields = ['id', 'title', 'slug', 'price', 'category']
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -39,6 +39,9 @@ class ProductViewSet(viewsets.ModelViewSet):
                                'create': ProductCreateSerializer,
                                'update': ProductCreateSerializer,
                                'add_to_cart': CartItemSerializer}
+    filterset_fields = ['category', ]
+
+    #lookup_field = 'slug'
 
     def get_permissions(self):
         permission_classes = []

@@ -1,19 +1,16 @@
+import requests
 from django.db.models import Sum, F, FloatField
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
-from django.views.generic import DetailView
-from rest_framework.authentication import TokenAuthentication
+from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView, get_object_or_404, \
-    RetrieveAPIView, ListAPIView, GenericAPIView
-from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, BasePermission
+from rest_framework.generics import CreateAPIView, ListCreateAPIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from shop.models import Product, Cart, CartItem
-from .models import User
+from Site_Shop.local_settings import slack_hook
+from shop.models import Cart, CartItem
 from user.serializers import RegistrationSerializer, UserListSerializer, UserDetailSerliazer, CartSerializer
+from .models import User
 
 
 class UserCreate(CreateAPIView):
@@ -53,14 +50,31 @@ def users_detail(request, pk):
 
 
 class CartView(APIView):
+    permission_classes = [IsAuthenticated, ]
 
     def get(self, request):
         cart = Cart.objects.get(owner=request.user)
         total_cost = CartItem.objects.filter(is_active=True, cart=cart).aggregate(
             price=Sum(F('price') * F('quantity'), output_field=FloatField()))
         context = {"total_cots": total_cost['price']}
-        print(CartItem.objects.filter(cart__owner_id=request.user.pk))
         serializer = CartSerializer(cart, context=context)
         return Response(serializer.data)
 
 
+class BuyView():
+    permission_classes = [IsAuthenticated, ]
+    # @TODO
+    #buy
+    #save_data in history
+    #send_slack_message
+
+
+def send_slack_message(text):
+    headers = {
+        'Content-type': 'application/json',
+    }
+    url = slack_hook
+    data = '{"text":"' + str(text) + '"}'
+    response = requests.post(url=url, headers=headers, data=data)
+
+    return response
