@@ -39,7 +39,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                                'add_to_cart': CartItemSerializer}
     filterset_class = ProductFilter
 
-
     # lookup_field = 'slug'
 
     def get_permissions(self):
